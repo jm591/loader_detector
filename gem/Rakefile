@@ -1,0 +1,6 @@
+require "rake/extensiontask"
+
+Rake::ExtensionTask.new "imageComp" do |ext|
+  ext.lib_dir = "lib/imageComp"
+  ext.config_options << "-lnetpbm"
+end
