@@ -1,9 +1,12 @@
 require 'imageComp'
 require 'benchmark'
+require 'logger'
 
 class ScreenshotComparer
 
     @@id
+    @@threshold = 0
+    @@logger = Logger.new(STDOUT)
 
     def self.initialize(id)
         @@id = id
@@ -11,62 +14,46 @@ class ScreenshotComparer
         `shotgun -f pam /tmp/image2.pam -i #{@@id}`
     end
 
+    def self.set_threshold(threshold)
+        @@threshold = threshold
+    end
+
+    def self.compare(count)
+        `shotgun -f pam /tmp/image1.pam -i #{@@id}`
+        pixeldiff = ImageCompare.compare_pamfiles()
+    
+        case pixeldiff
+        when 0 .. @@threshold
+            count += 1
+        when -1
+            @@logger.warn("Window size changed")
+        when -2
+            @@logger.error("Can't open image file")
+        when -3
+            @@logger.error("Some image dimension = 0")
+        else
+            count = 0
+        end
+        return count, pixeldiff
+    end
+
     def self.check_loading
         count = 0
-        loaded = false
-        while !loaded do
-            `shotgun -f pam /tmp/image1.pam -i #{@@id}`
-            pixeldiff = ImageCompare.compare_pamfiles()
-        
-            if pixeldiff > 265
-                count = 0
-            elsif pixeldiff > 0
-                count += 1
-            elsif pixeldiff == -1
-                p "Window size changed"
-            elsif pixeldiff == -2
-                p "Can't open image file"
-            end
-
+        while true do
+            count = compare(count)[0]
             if(count >= 10)
-                loaded = true
-                return "Page finished loading!"
+                return true
             end
         end
     end
 
     def self.check_loading_debug(driver)
-
         driver.navigate.to 'http://localhost:3000/loader'
         t0 = Time.now
         runtime = 0
 
-        count = 0
-        loaded = false
         while runtime < 30 do
-            `shotgun -f pam /tmp/image1.pam -i #{@@id}`
-            pixeldiff = ImageCompare.compare_pamfiles()
-        
-            
-            if pixeldiff == 0
-                count = 0
-                puts "# #{pixeldiff}"
-            elsif pixeldiff > 0
-                count += 1
-                puts "- #{pixeldiff}"
-            elsif pixeldiff == -1
-                p "Window size changed"
-            elsif pixeldiff == -2
-                p "Can't open image file"
-            elsif pixeldiff == -3
-                p "Some image dimension = 0"
-            end
-
-            if(count >= 10)
-                loaded = true
-                puts "Page finished loading!"
-            end
-
+            p "Detected changes: #{compare(0)[1]} pixels"
             runtime = Time.now - t0
         end
     end
@@ -77,22 +64,9 @@ class ScreenshotComparer
             count = 0
             loaded = false
             times.times do
-                `shotgun -f pam /tmp/image1.pam -i #{@@id}`
-                pixeldiff = ImageCompare.compare_pamfiles()
-            
-                if pixeldiff > 265
-                    count = 0
-                elsif pixeldiff > 0
-                    count += 1
-                elsif pixeldiff == -1
-                    p "Window size changed"
-                elsif pixeldiff == -2
-                    p "Can't open image file"
-                end
-    
+                count = compare(count)[0]
                 if(count >= 10)
-                    loaded = true
-                    #return "Page finished loading!"
+                    
                 end
             end
         }
