@@ -65,12 +65,18 @@ class ScreenshotComparer
     def self.check_loading
         check_for_exceptions()
         count = 0
-        while true do
+        t0 = Time.now
+        runtime = 0
+
+        while runtime < 10 do
             count = compare(count)[0]
             if(count >= 10)
                 return true
             end
+            runtime = Time.now - t0
         end
+        @@logger.warn("check_loading timed out. Couldn't detect a loaded website.")
+        return false
     end
 
     #Debug function for the website loading checker. Prints the number of detected changes for 30 seconds.
