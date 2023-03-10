@@ -19,7 +19,7 @@ class ScreenshotComparer
     @@threshold = 0
     @@logger = Logger.new(STDOUT)
 
-    #Sets the id of the window of which the program will take screenshots and creates the two initial image file.
+    #Sets the id of the window of which the program will take screenshots and creates the two initial screenshots.
     def self.initialize(id)
         @@id = id
         `shotgun -f pam /tmp/image1.pam -i #{@@id}`
@@ -110,6 +110,13 @@ class ScreenshotComparer
         puts "Time total: #{(time * 100).floor / 100.0}s"
         puts "Average time per run: #{((time/times*1000) * 100).floor / 100.0}ms"
         puts "Checks per Second: #{((times/time)*100).floor / 100.0}"
+    end
+
+    def self.id
+        @@id
+    end
+    def self.threshold
+        @@threshold
     end
 end
 
