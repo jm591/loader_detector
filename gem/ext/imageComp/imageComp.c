@@ -2,17 +2,23 @@
 #include "netpbm/pam.h"
 
 
-static VALUE compare_pamfiles(VALUE self){
+static VALUE compare_pamfiles(VALUE self, VALUE obj1, VALUE obj2 ){
 
     pm_init("404", 0);
 
     struct pam pam1;
     struct pam pam2;
 
-    FILE *input_file1 = fopen("/tmp/image1.pam", "r");
-    FILE *input_file2 = fopen("/tmp/image2.pam", "r");
+    Check_Type(obj1, T_STRING);
+    Check_Type(obj2, T_STRING);
+
+    const char *filename1 = RSTRING(obj1)->as.heap.ptr;
+    const char *filename2 = RSTRING(obj2)->as.heap.ptr;
+
+    FILE *input_file1 = fopen(filename1, "r");
+    FILE *input_file2 = fopen(filename2, "r");
+
     if(input_file1 == NULL || input_file2 == NULL){
-        rename("/tmp/image1.pam", "/tmp/image2.pam");
         return INT2NUM(-2);
     }
 
@@ -21,11 +27,9 @@ static VALUE compare_pamfiles(VALUE self){
 
 
     if(pam1.height != pam2.height || pam1.width != pam2.width || pam1.depth != pam2.depth){
-        rename("/tmp/image1.pam", "/tmp/image2.pam");
         return INT2NUM(-1);
     }
     if(pam1.height == 0 || pam1.width == 0 || pam2.height == 0 || pam2.width == 0 || pam1.depth == 0 || pam2.depth == 0){
-        rename("/tmp/image1.pam", "/tmp/image2.pam");
         return INT2NUM(-3);
     }
 
@@ -51,7 +55,6 @@ static VALUE compare_pamfiles(VALUE self){
     fclose(input_file1);
     fclose(input_file2);
 
-    rename("/tmp/image1.pam", "/tmp/image2.pam");
     return INT2NUM(count);
 }
 
@@ -59,5 +62,5 @@ static VALUE compare_pamfiles(VALUE self){
 void Init_imageComp(void) {
     VALUE ImageCompare = rb_define_module("ImageCompare");
     VALUE Helpers = rb_define_class_under(ImageCompare, "Helpers", rb_cObject);
-    rb_define_singleton_method(Helpers, "compare_pamfiles", compare_pamfiles, 0);
+    rb_define_singleton_method(Helpers, "compare_pamfiles", compare_pamfiles, 2);
 }
