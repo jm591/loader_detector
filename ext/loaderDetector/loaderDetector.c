@@ -59,8 +59,8 @@ static VALUE compare_pamfiles(VALUE self, VALUE obj1, VALUE obj2 ){
 }
 
 
-void Init_imageComp(void) {
-    VALUE ImageCompare = rb_define_module("ImageCompare");
-    VALUE Helpers = rb_define_class_under(ImageCompare, "Helpers", rb_cObject);
-    rb_define_singleton_method(Helpers, "compare_pamfiles", compare_pamfiles, 2);
+void Init_loaderDetector(void) {
+    VALUE LoaderDetector = rb_define_module("LoaderDetector");
+    //VALUE Helpers = rb_define_class_under(LoaderDetector, "Helpers", rb_cObject);
+    rb_define_singleton_method(LoaderDetector, "compare_pamfiles", compare_pamfiles, 2);
 }
