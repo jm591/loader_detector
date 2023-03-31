@@ -1,4 +1,5 @@
 require "loaderDetector/loaderDetector"
+require 'shotgun_ruby'
 
 
 module LoaderDetector
@@ -27,11 +28,11 @@ module LoaderDetector
         # @param timeout [Integer] number of seconds the program will wait for the website to load.
         # @raise [IDnotSetError] if the id of the window to be screenshotted isn't set
         # @raise [ThresholdNegativeError] if the pixel difference threshold is negative
-        def initialize( id, threshold = 0, frame_count = 10, timeout = 10 )
+        def initialize( driver, threshold = 0, frame_count = 10, timeout = 10 )
             raise IDnotSetError.new if id == ""
             raise ThresholdNegativeError.new if threshold < 0
 
-            @id = id.strip
+            @driver = driver
             @threshold = threshold
             @frame_count = frame_count
             @timeout = timeout
@@ -42,16 +43,14 @@ module LoaderDetector
             imagefile1 = Tempfile.new(['image1', '.pnm'])
             imagefile2 = Tempfile.new(['image2', '.pnm'])
 
-            ShotgunRuby.screenshot(@id, imagefile1.path)
+            @driver.pam_screenshot_file(imagefile1.path)
 
             count = 0
             t0 = Time.now
 
-            #while Time.now - t0 < @timeout do
-            puts Benchmark.measure{
-            1000.times do
+            while Time.now - t0 < @timeout do
 
-                ShotgunRuby.screenshot(@id, imagefile2.path)
+                @driver.pam_screenshot_file(imagefile2.path)
 
                 count = difference_detected?(imagefile1, imagefile2) ? 0 : count + 1
 
@@ -66,7 +65,6 @@ module LoaderDetector
                     return true
                 end
             end
-            }
 
             logger.warn("check_loading timed out. Couldn't detect a loaded website.")
 
@@ -98,6 +96,22 @@ module LoaderDetector
         # @return [Logger] Logger instance
         def logger
             @@logger
+        end
+    end
+
+    class ScreenshotDriver
+        def pam_screenshot_file( file_path )
+          raise 'not implemented'
+        end
+    end
+
+    class ShotgunRubyDriver < ScreenshotDriver
+        def initialize( window_id )
+            @window_id = window_id.strip
+        end
+      
+        def pam_screenshot_file( file_path )
+            ShotgunRuby.screenshot( @window_id, file_path )
         end
     end
 end
