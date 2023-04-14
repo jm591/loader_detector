@@ -1,4 +1,4 @@
-require "loaderDetector/loaderDetector"
+require "loader_detector/loader_detector"
 require 'shotgun_ruby'
 
 

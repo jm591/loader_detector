@@ -1,6 +1,5 @@
 .vscode
 .yardoc
-tests/
 logs/
 package/
 tmp/
@@ -8,3 +7,4 @@ doc/
 debug.rb
 test.rb
 lib/**/*.so
+*.lock
