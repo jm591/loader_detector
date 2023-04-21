@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
     s.name          = "loader_detector"
-    s.version       = "0.1.0"
+    s.version       = "0.1.1"
     s.authors       = ["Jonas Moesicke"]
 
     s.summary       = "Loader detection for automated website testing"
