@@ -11,5 +11,5 @@ Gem::Specification.new do |s|
     s.files         = ["lib/loader_detector.rb", "lib/loader_detector/loader_detector.so"]
     s.require_paths = ["lib", "ext"]
     s.extensions    = ["ext/loader_detector/extconf.rb"]
-    s.add_dependency = "shotgun_ruby", "~> 0.1.3"
+    s.add_dependency "shotgun_ruby", "~> 0.1.3"
 end
