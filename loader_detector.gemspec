@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
     s.homepage      = "https://github.com/jm591/loader_detector"
     s.required_ruby_version = ">= 2.3.0"
 
-    s.files         = ["lib/loader_detector.rb", "lib/loader_detector/loader_detector.so"]
+    s.files         = ["lib/loader_detector.rb"]
     s.require_paths = ["lib", "ext"]
     s.extensions    = ["ext/loader_detector/extconf.rb"]
     s.add_dependency "shotgun_ruby", "~> 0.1.3"
