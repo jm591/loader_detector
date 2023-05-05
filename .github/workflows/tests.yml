@@ -27,7 +27,9 @@ jobs:
       uses: ruby/setup-ruby@v1
     # uses: ruby/setup-ruby@55283cc23133118229fd3f97f9336ee23a179fcf # v1.146.0
       with:
-        ruby-version: '2.7'
+        ruby-version: '3.0'
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+    - name: Run rake tests
+      run: bundle exec rspec tests/rake_test.rb
     - name: Run tests
       run: bundle exec rspec tests/loader_detector_test.rb
