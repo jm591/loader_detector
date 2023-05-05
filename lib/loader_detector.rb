@@ -1,5 +1,6 @@
-require "loader_detector/loader_detector"
 require 'shotgun_ruby'
+require 'logger'
+require_relative 'loader_detector/loader_detector'
 
 
 module LoaderDetector
@@ -28,7 +29,7 @@ module LoaderDetector
         # @param timeout [Integer] number of seconds the program will wait for the website to load.
         # @raise [IDnotSetError] if the id of the window to be screenshotted isn't set
         # @raise [ThresholdNegativeError] if the pixel difference threshold is negative
-        def initialize( driver, threshold = 0, frame_count = 10, timeout = 10 )
+        def initialize( driver, threshold = 0, frame_count = 10, timeout = 10, debug = false)
             raise IDnotSetError.new if id == ""
             raise ThresholdNegativeError.new if threshold < 0
 
@@ -36,6 +37,9 @@ module LoaderDetector
             @threshold = threshold
             @frame_count = frame_count
             @timeout = timeout
+            @debug = debug
+            @debug_count = 1.0
+            @average_value = 0.0
         end
 
         # Checks if a website has finished loading already. Calls the comparison algorithm, if the pixel difference is below the threshold 10 times in a row it assumes that the website doesn't change anymore. 
@@ -60,6 +64,13 @@ module LoaderDetector
                     logger.warn("Can't rename imagefile2")
                 end
 
+                if @debug == true
+                    if count >= @frame_count
+                        return true, @debug_count, @average_value
+                    end
+                    @debug_count = @debug_count + 1
+                end
+
                 if count >= @frame_count
                     yield if block_given?
                     return true
@@ -67,7 +78,10 @@ module LoaderDetector
             end
 
             logger.warn("check_loading timed out. Couldn't detect a loaded website.")
-
+            
+            if @debug == true 
+                return false, @debug_count - 1, @average_value
+            end
             return false
         end
 
@@ -87,6 +101,10 @@ module LoaderDetector
             when -3
                 logger.error("Some image dimension = 0")
                 return true
+            end
+
+            if @debug == true
+                @average_value = @average_value * (1 - 1/@debug_count) + pixeldiff * 1/@debug_count
             end
 
             return pixeldiff > @threshold
