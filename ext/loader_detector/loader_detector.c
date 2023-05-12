@@ -1,5 +1,5 @@
 #include "ruby.h"
-#include <netpbm/pam.h>
+#include <pam.h>
 
 
 static VALUE compare_pamfiles(VALUE self, VALUE obj1, VALUE obj2 ){
