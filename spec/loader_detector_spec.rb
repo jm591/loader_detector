@@ -8,8 +8,8 @@ RSpec.describe 'Screenshot Comparer:', type: :feature do
 
     context 'Create a black and a white 100x100 pam image to check the comparison:' do
         before do
-            @white = File.expand_path('tests/100x100-white.pam')
-            @black = File.expand_path('tests/100x100-black.pam')
+            @white = File.expand_path('spec/100x100-white.pam')
+            @black = File.expand_path('spec/100x100-black.pam')
         end
         
         it 'when comparing different colors the difference should be 30000' do
@@ -22,7 +22,7 @@ RSpec.describe 'Screenshot Comparer:', type: :feature do
         end
     end
 
-    context 'Test Loader Detector parameters:' do
+    context 'Test Loader Detector parameters (Part 1):' do
         before do
             @driver = Selenium::WebDriver.for :firefox
             window = @driver.title
@@ -44,11 +44,26 @@ RSpec.describe 'Screenshot Comparer:', type: :feature do
             expect(detector.wait_until_content_loaded).to eq(true)
         end
 
-        it 'Navigating to the loader test side and waiting for a loader should return false:' do
-            detector = LoaderDetector::Detector.new(@loaderdriver)
-            root = File.expand_path('tests/index.html.erb')
+        after do
+            @driver.close
+        end
+    end
+
+    context 'Test Loader Detector parameters (Part 2):' do
+        before do
+            root = File.expand_path('spec/index.html.erb')
             @server = WEBrick::HTTPServer.new :Port => 8000, :DocumentRoot => root
             trap 'INT' do @server.shutdown end
+
+            @driver = Selenium::WebDriver.for :firefox
+            window = @driver.title
+            id = `xwininfo -name "Mozilla Firefox" | grep -Po '(?<=Window id: )[0-9a-zA-Z]+'`
+
+            @loaderdriver = LoaderDetector::ShotgunRubyDriver.new(id)
+        end
+
+        it 'Navigating to the loader test side and waiting for a loader should return false:' do
+            detector = LoaderDetector::Detector.new(@loaderdriver)
 
             threads = []
 
@@ -67,10 +82,6 @@ RSpec.describe 'Screenshot Comparer:', type: :feature do
         end
 
         it 'Setting a high threshold on the loader test site should return true:' do
-            root = File.expand_path('tests/index.html.erb')
-            @server = WEBrick::HTTPServer.new :Port => 8000, :DocumentRoot => root
-            trap 'INT' do @server.shutdown end
-
             detector = LoaderDetector::Detector.new(@loaderdriver, 10000)
 
             threads = []
@@ -89,9 +100,33 @@ RSpec.describe 'Screenshot Comparer:', type: :feature do
             expect(@value).to be true
         end
 
+        it 'Changing the default timeout should stop the comparison loop after that time: ' do
+            detector = LoaderDetector::Detector.new(@loaderdriver, 0, 10, 4)
+
+            threads = []
+
+            threads << Thread.new do
+                @server.start
+            end
+
+            threads << Thread.new do
+                @driver.navigate.to 'localhost:8000'
+                time_start = Time.now
+                @value = detector.wait_until_content_loaded
+                time_end = Time.now
+                @server.shutdown
+
+                @time =  time_end - time_start
+            end
+
+            threads.each { |thr| thr.join }
+            expect(@time).to be_between(3.9, 4.1)
+        end
+
         after do
             @driver.close
         end
+
     end
 
 end

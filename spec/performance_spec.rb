@@ -4,7 +4,7 @@ require 'loader_detector'
 
 RSpec.describe 'Comparer Performace Test:' do
     before do
-        root = File.expand_path('tests/index.html.erb')
+        root = File.expand_path('spec/index.html.erb')
         @server = WEBrick::HTTPServer.new :Port => 8000, :DocumentRoot => root
         trap 'INT' do @server.shutdown end
 
@@ -16,7 +16,7 @@ RSpec.describe 'Comparer Performace Test:' do
         @detector = LoaderDetector::Detector.new(@loaderdriver, 0, 10, 10)
     end
 
-    it 'The Detector should detects a finished loader in < 1000ms' do
+    it 'The Detector should detects a finished loader in < 500ms' do
         threads = []
         queue = Queue.new
 
@@ -60,7 +60,31 @@ RSpec.describe 'Comparer Performace Test:' do
         difference = (@time_end_detector - @time_end_webdriver) * 1000
         puts "Difference: #{difference}"
 
-        expect(difference).to be <= 1000
+        expect(difference).to be <= 500
+    end
+
+    it 'The Average Comparison should be faster than 30ms: ' do
+        threads  = []
+
+        threads << Thread.new do
+            @server.start
+        end
+
+        threads << Thread.new do
+            detector = LoaderDetector::Detector.new(@loaderdriver, 0, 10, 10, true)
+            @driver.navigate.to 'localhost:8000'
+
+            @time_start = Time.now
+            @result = detector.wait_until_content_loaded
+            @time_end = Time.now
+            @server.shutdown
+        end
+
+        threads.each { |thr| thr.join }
+
+        ms_per_comparison = (@time_end - @time_start) / @result[1] * 1000
+        puts "Average: #{ms_per_comparison}ms"
+        expect(ms_per_comparison).to be < 30
     end
 
     after do
